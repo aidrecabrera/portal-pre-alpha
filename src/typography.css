@@ -1,0 +1,41 @@
+@layer components {
+  .typography-h1 {
+    @apply text-4xl font-extrabold tracking-tight scroll-m-20 lg:text-5xl;
+  }
+
+  .typography-h2 {
+    @apply pb-2 text-3xl font-semibold tracking-tight transition-colors scroll-m-20 first:mt-0;
+  }
+
+  .typography-h3 {
+    @apply mb-2 text-2xl font-semibold tracking-tight scroll-m-20;
+  }
+
+  .typography-p {
+    @apply leading-6 [&:not(:first-child)]:mt-2;
+  }
+
+  .typography-a {
+    @apply font-medium underline text-primary underline-offset-4;
+  }
+
+  .typography-blockquote {
+    @apply pl-6 mt-6 italic border-l-2;
+  }
+
+  .typography-ul {
+    @apply my-6 ml-6 list-disc [&>li]:mt-2;
+  }
+
+  .typography-table {
+    @apply w-full my-6 overflow-y-auto;
+  }
+
+  .typography-th {
+    @apply border px-4 py-2 text-left font-bold [&[align=center]]:text-center [&[align=right]]:text-right;
+  }
+
+  .typography-td {
+    @apply border px-4 py-2 text-left [&[align=center]]:text-center [&[align=right]]:text-right;
+  }
+}

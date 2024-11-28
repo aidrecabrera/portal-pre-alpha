@@ -1,0 +1,335 @@
+enum SemesterEnum {
+  FIRST
+  SECOND
+  SUMMER
+
+  @@map("semester_enum")
+  @@schema("schedules")
+}
+
+enum DayEnum {
+  Monday
+  Tuesday
+  Wednesday
+  Thursday
+  Friday
+  Saturday
+  Sunday
+
+  @@map("day_enum")
+  @@schema("schedules")
+}
+
+// Generator and datasource
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+  schemas   = ["auth", "academics", "financials", "enrollment", "communications", "schedules"]
+}
+
+// Models for auth schema
+model User {
+  id            Int      @id @default(autoincrement())
+  username      String   @unique
+  password_hash String
+  email         String   @unique
+  role          Role
+  created_at    DateTime @default(now())
+
+  student           Student?
+  RegistrationToken RegistrationToken?
+
+  @@map("user")
+  @@schema("auth")
+}
+
+model RegistrationToken {
+  id         Int      @id @default(autoincrement())
+  token      String   @unique
+  otp        String?
+  expires_at DateTime
+  used       Boolean  @default(false)
+
+  student    Student @relation(fields: [student_id], references: [id])
+  student_id Int     @unique
+  user       User?   @relation(fields: [user_id], references: [id])
+  user_id    Int?    @unique
+
+  @@map("registration_token")
+  @@schema("auth")
+}
+
+enum Role {
+  student
+  teacher
+  admin
+
+  @@map("role")
+  @@schema("auth")
+}
+
+// Models for enrollment schema
+model Student {
+  id                       Int      @id @default(autoincrement())
+  first_name               String
+  last_name                String
+  middle_name              String?
+  gender                   String   @db.Char(1)
+  birthdate                DateTime
+  email                    String   @unique
+  phone                    String   @unique
+  course_id                Int
+  student_number           String?  @unique
+  year_level               Int?
+  enrollment_status        String   @default("Undergraduate")
+  program                  String
+  learner_reference_number String?
+  transferee               Boolean
+  preferred_class_session  String
+  birth_place              String
+  civil_status             String
+  religion                 String
+  mobile_number            String
+  landline_number          String?
+  nationality              String
+  disability               Boolean?
+  created_at               DateTime @default(now())
+  updated_at               DateTime @updatedAt
+
+  user_id Int?  @unique
+  User    User? @relation(fields: [user_id], references: [id])
+
+  Enrollments             EnrollmentHistory[]
+  StudentFamilyBackground StudentFamilyBackground[]
+  StudentSibling          StudentSibling[]
+
+  StudentAddress              StudentAddress?
+  StudentAcademicProfile      StudentAcademicProfile?
+  StudentSocioEconomicProfile StudentSocioEconomicProfile?
+  StudentConsentForm          StudentConsentForm?
+  RegistrationToken           RegistrationToken?
+
+  @@map("student")
+  @@schema("enrollment")
+}
+
+model EnrollmentHistory {
+  id              Int      @id @default(autoincrement())
+  class_id        Int
+  enrollment_date DateTime
+  Student         Student  @relation(fields: [student_id], references: [id])
+  student_id      Int
+
+  @@map("enrollment_history")
+  @@schema("enrollment")
+}
+
+model EnrolleeInquiry {
+  id         Int      @id @default(autoincrement())
+  email      String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("enrollee_inquiry")
+  @@schema("communications")
+}
+
+model StudentAddress {
+  id                  Int      @id @default(autoincrement())
+  address_type        String
+  province            String
+  city_municipality   String
+  barangay            String
+  house_number_street String
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+
+  Student    Student @relation(fields: [student_id], references: [id])
+  student_id Int     @unique
+
+  @@map("student_address")
+  @@schema("enrollment")
+}
+
+model StudentFamilyBackground {
+  id                             Int      @id @default(autoincrement())
+  type                           String
+  first_name                     String
+  middle_name                    String?
+  last_name                      String
+  age                            Int?
+  nationality                    String
+  occupation                     String
+  employer_name_address          String?
+  highest_educational_attainment String?
+  contact_number                 String?
+  email                          String?
+  created_at                     DateTime @default(now())
+  updated_at                     DateTime @updatedAt
+
+  student    Student @relation(fields: [student_id], references: [id])
+  student_id Int     @unique
+
+  @@map("student_family_background")
+  @@schema("enrollment")
+}
+
+model StudentSibling {
+  id                 Int      @id @default(autoincrement())
+  number_of_children Int?
+  number_of_siblings Int?
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  student    Student @relation(fields: [student_id], references: [id])
+  student_id Int     @unique
+
+  @@map("student_sibling")
+  @@schema("enrollment")
+}
+
+model StudentAcademicProfile {
+  id              Int      @id @default(autoincrement())
+  level           String
+  als_pept        Boolean?
+  school_name     String?
+  honors_received String?
+  year_graduated  Int?
+  strand          String?
+  track           String?
+  program_degree  String?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  student    Student @relation(fields: [student_id], references: [id])
+  student_id Int     @unique
+
+  @@map("student_academic_profile")
+  @@schema("enrollment")
+}
+
+model StudentSocioEconomicProfile {
+  id                   Int      @id @default(autoincrement())
+  status               String
+  living_with          String
+  living_in            String
+  studies_supported_by String
+  tribal_affiliation   String?
+  program_intended     String
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+
+  student    Student @relation(fields: [student_id], references: [id])
+  student_id Int     @unique
+
+  @@map("student_socio_economic_profile")
+  @@schema("enrollment")
+}
+
+model StudentConsentForm {
+  id         Int      @id @default(autoincrement())
+  is_agree   Boolean
+  created_at DateTime @default(now())
+
+  student    Student @relation(fields: [student_id], references: [id])
+  student_id Int     @unique
+
+  @@map("student_consent_form")
+  @@schema("enrollment")
+}
+
+// Models for schedules schema
+model Semesters {
+  semester_id    Int            @id @default(autoincrement())
+  academic_year  String         @db.VarChar(20)
+  semester       SemesterEnum
+  studentClasses StudentClass[]
+
+  @@map("semesters")
+  @@schema("schedules")
+}
+
+model Subjects {
+  subject_id     Int            @id @default(autoincrement())
+  subject_code   String         @db.VarChar(20)
+  title          String         @db.VarChar(100)
+  units          Float          @default(0) @db.DoublePrecision
+  hours          Float          @default(0) @db.DoublePrecision
+  description    String?
+  studentClasses StudentClass[]
+
+  @@map("subjects")
+  @@schema("schedules")
+}
+
+model Instructors {
+  instructor_id  Int            @id @default(autoincrement())
+  name           String         @db.VarChar(100)
+  email          String?        @db.VarChar(100)
+  phone          String?        @db.VarChar(20)
+  department     String?        @db.VarChar(100)
+  studentClasses StudentClass[]
+
+  @@map("instructors")
+  @@schema("schedules")
+}
+
+model Rooms {
+  room_id        Int            @id @default(autoincrement())
+  room_number    String         @db.VarChar(20)
+  building_name  String?        @db.VarChar(100)
+  capacity       Int?
+  studentClasses StudentClass[]
+
+  @@map("rooms")
+  @@schema("schedules")
+}
+
+model Sections {
+  section_id     Int            @id @default(autoincrement())
+  section_name   String         @db.VarChar(20)
+  studentClasses StudentClass[]
+
+  @@map("sections")
+  @@schema("schedules")
+}
+
+model Schedules {
+  schedule_id    Int            @id @default(autoincrement())
+  day            DayEnum
+  start_time     DateTime       @db.Time
+  end_time       DateTime       @db.Time
+  studentClasses StudentClass[]
+
+  @@map("schedules")
+  @@schema("schedules")
+}
+
+model StudentClass {
+  student_class_id Int @id @default(autoincrement())
+  student_id       Int
+  subject_id       Int
+  semester_id      Int
+  instructor_id    Int
+  room_id          Int
+  schedule_id      Int
+  section_id       Int
+  class_id         Int
+
+  subject    Subjects    @relation(fields: [subject_id], references: [subject_id], onDelete: Cascade)
+  semester   Semesters   @relation(fields: [semester_id], references: [semester_id], onDelete: Cascade)
+  instructor Instructors @relation(fields: [instructor_id], references: [instructor_id], onDelete: Cascade)
+  room       Rooms       @relation(fields: [room_id], references: [room_id], onDelete: Cascade)
+  schedule   Schedules   @relation(fields: [schedule_id], references: [schedule_id], onDelete: Cascade)
+  section    Sections    @relation(fields: [section_id], references: [section_id], onDelete: Cascade)
+
+  @@unique([student_id, subject_id, semester_id])
+  @@map("student_classes")
+  @@schema("schedules")
+}
